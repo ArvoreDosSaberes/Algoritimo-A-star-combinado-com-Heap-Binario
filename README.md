@@ -42,20 +42,20 @@ Passos recomendados (Linux):
 
 1. Crie e ative um ambiente virtual
 
-   ```bash
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
 2. Instale as dependências
 
-   ```bash
+```bash
 pip install -r requirements.txt
 ```
 
 3. Execute o aplicativo
 
-   ```bash
+```bash
 python main.py
 ```
 
