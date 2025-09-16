@@ -68,3 +68,16 @@ Controles:
 - Hart, Nilsson, Raphael (1968) — "A Formal Basis for the Heuristic Determination of Minimum Cost Paths".
 - Russell & Norvig — "Artificial Intelligence: A Modern Approach".
 - Implementações: `heapq` (Python), `std::priority_queue` (C++), `PriorityQueue` (Java).
+
+## Licença
+
+Este trabalho está licenciado sob a licença Creative Commons Atribuição-CompartilhaIgual 4.0 Internacional (CC BY-SA 4.0).
+
+- Consulte o arquivo [`LICENSE.md`](./LICENSE.md) para detalhes.
+- Resumo (legível por humanos): https://creativecommons.org/licenses/by-sa/4.0/deed.pt_BR
+- Texto legal completo: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+
+Ao reutilizar, por favor:
+- Atribua crédito apropriado, incluindo link para este repositório e para a licença.
+- Indique se foram feitas alterações.
+- Distribua obras derivadas sob a mesma licença (CompartilhaIgual).
