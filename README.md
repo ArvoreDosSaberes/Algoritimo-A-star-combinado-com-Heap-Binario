@@ -34,6 +34,38 @@ Para uma explicação completa, incluindo código de exemplo em Python, boas pr�
 
 - [TUTORIAL.md](./TUTORIAL.md)
 
+## Arquitetura do código (Python)
+
+O aplicativo interativo está em `main.py` (Pygame). Principais componentes:
+
+- `compute_board_rect(...)`: calcula o retângulo centralizado do tabuleiro.
+- `create_grid(...)`: cria a matriz booleana de células (False = livre, True = obstáculo).
+- `pos_to_cell(...)`: converte posição em pixels para coordenadas de célula `(row, col)`.
+- `nearest_free_cell(...)`: via BFS, encontra a célula livre mais próxima de uma origem.
+- `draw_board(...)`: desenha o tabuleiro, obstáculos e a grade.
+- `cell_center_px(...)` e `valid_cell(...)`: utilitários de coordenadas/validação.
+- `a_star_grid(...)`: implementação de A* sobre o grid 4-conexo usando `heapq` (heap binário).
+- `main()`: loop do Pygame, trata eventos do mouse, replaneja caminho e anima o movimento do agente.
+
+As funções agora possuem docstrings detalhadas em Português, facilitando o entendimento do fluxo.
+
+## Como o A* está implementado neste projeto
+
+A função `a_star_grid(grid, start, goal)` utiliza:
+
+- Heurística Manhattan: `h(n) = |r_n - r_goal| + |c_n - c_goal|`.
+- Custo uniforme por passo (1 por movimento ortogonal).
+- `heapq` como fila de prioridade (heap binário) com técnica de lazy deletion:
+  quando um nó recebe um custo melhor, uma nova entrada é empilhada e as antigas
+  são ignoradas no momento da extração se `f` estiver desatualizado.
+
+No loop principal (`main()`), o agente:
+
+- Converte sua posição atual para célula e, se bloqueada, usa `nearest_free_cell(...)`.
+- Planeja até a célula livre mais próxima do cursor do mouse.
+- Replaneja quando o objetivo muda ou quando o grid é editado.
+- Move-se suavemente entre os waypoints do caminho planejado em velocidade fixa.
+
 ## Executando o tabuleiro (Python/Pygame)
 
 Este projeto inclui um tabuleiro interativo feito em Python com Pygame. O tabuleiro ocupa 80% da janela, utiliza células de 32x32 pixels e permite desenhar/apagar passando o mouse com o botão esquerdo pressionado (toggle por célula).

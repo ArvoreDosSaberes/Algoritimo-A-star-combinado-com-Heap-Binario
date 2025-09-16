@@ -1,3 +1,9 @@
+"""Aplicativo interativo (Pygame) demonstrando o algoritmo A* com heap binário.
+
+- Edite o grid com o mouse (False=livre, True=obstáculo).
+- O agente persegue o cursor usando A* com heurística Manhattan e lazy deletion.
+- Implementação usa `heapq` como fila de prioridade (heap binário).
+"""
 import sys
 import math
 import pygame
@@ -16,7 +22,7 @@ AGENT_COLOR = (80, 180, 240)
 PATH_COLOR = (200, 120, 200)
 
 # Configurações do tabuleiro
-CELL_SIZE = 16  # cada célula é 32x32 pixels
+CELL_SIZE = 16  # cada célula é 16x16 pixels
 BOARD_SCALE = 0.8  # tabuleiro ocupa 80% da janela
 
 # Agente perseguidor
@@ -44,6 +50,17 @@ def compute_board_rect(window_width: int, window_height: int, cell_size: int, sc
 
 
 def create_grid(board_rect: pygame.Rect, cell_size: int):
+    """Cria a matriz de células (grid) booleana alinhada ao retângulo do tabuleiro.
+
+    Cada célula representa um bloco navegável (False) ou bloqueado/obstáculo (True).
+
+    Parâmetros:
+    - board_rect: área retangular ocupada pelo tabuleiro na janela.
+    - cell_size: tamanho de cada célula, em pixels (lado do quadrado).
+
+    Retorna:
+    - Uma lista de listas de booleanos com dimensões `rows x cols`.
+    """
     cols = board_rect.width // cell_size
     rows = board_rect.height // cell_size
     # Matriz de booleanos: False = vazio, True = marcado
@@ -51,6 +68,18 @@ def create_grid(board_rect: pygame.Rect, cell_size: int):
 
 
 def pos_to_cell(board_rect: pygame.Rect, cell_size: int, pos: tuple[int, int]):
+    """Converte uma posição em pixels na janela para coordenadas de célula (linha, coluna).
+
+    Se a posição estiver fora do `board_rect`, retorna None.
+
+    Parâmetros:
+    - board_rect: área do tabuleiro.
+    - cell_size: tamanho da célula em pixels.
+    - pos: tupla (x, y) em pixels, no espaço da janela.
+
+    Retorna:
+    - (row, col) como inteiros, ou None se fora do tabuleiro.
+    """
     x, y = pos
     # Verifica se está dentro do tabuleiro
     if not board_rect.collidepoint(x, y):
@@ -63,8 +92,18 @@ def pos_to_cell(board_rect: pygame.Rect, cell_size: int, pos: tuple[int, int]):
 
 
 def nearest_free_cell(grid, start_rc: tuple[int, int]):
-    """Retorna a célula livre mais próxima de start_rc (inclusive ela mesma),
-    usando BFS 4-direções. Retorna None se não houver célula livre.
+    """Encontra a célula livre mais próxima a partir de `start_rc` (inclusive ela mesma).
+    
+    A busca usa BFS em 4 direções (cima, baixo, esquerda, direita), o que
+    garante encontrar a célula livre mais próxima em termos de distância Manhattan.
+    Caso não exista célula livre acessível, retorna None.
+
+    Parâmetros:
+    - grid: matriz booleana com obstáculos.
+    - start_rc: tupla (row, col) a partir da qual se inicia a expansão.
+
+    Retorna:
+    - Tupla (row, col) da célula livre mais próxima ou None.
     """
     if start_rc is None:
         return None
@@ -91,12 +130,19 @@ def nearest_free_cell(grid, start_rc: tuple[int, int]):
 
 
 def toggle_cell(grid, cell):
+    """Alterna o estado de uma célula no grid entre livre (False) e bloqueado (True)."""
     r, c = cell
     if 0 <= r < len(grid) and 0 <= c < len(grid[0]):
         grid[r][c] = not grid[r][c]
 
 
 def draw_board(surface: pygame.Surface, board_rect: pygame.Rect, grid, cell_size: int):
+    """Desenha o tabuleiro, as células marcadas e a malha de grade na `surface`.
+
+    - O contorno do tabuleiro é desenhado com `BORDER_COLOR`.
+    - Células marcadas (bloqueadas) são preenchidas com `CELL_COLOR`.
+    - Linhas da grade são traçadas para orientar a edição com o mouse.
+    """
     # Fundo do tabuleiro
     pygame.draw.rect(surface, BORDER_COLOR, board_rect, width=2)
 
@@ -125,6 +171,7 @@ def draw_board(surface: pygame.Surface, board_rect: pygame.Rect, grid, cell_size
 
 # ---------- Utilidades de Grid/Coordenadas ----------
 def cell_center_px(board_rect: pygame.Rect, cell_size: int, rc: tuple[int, int]) -> tuple[int, int]:
+    """Retorna a posição (x, y) em pixels do centro da célula `rc` dentro do tabuleiro."""
     r, c = rc
     x = board_rect.left + c * cell_size + cell_size // 2
     y = board_rect.top + r * cell_size + cell_size // 2
@@ -132,11 +179,29 @@ def cell_center_px(board_rect: pygame.Rect, cell_size: int, rc: tuple[int, int])
 
 
 def valid_cell(grid, r: int, c: int) -> bool:
+    """Verifica se a célula (r, c) está dentro dos limites e é livre (não bloqueada)."""
     return 0 <= r < len(grid) and 0 <= c < len(grid[0]) and not grid[r][c]
 
 
 # ---------- A* com heap binário ----------
 def a_star_grid(grid, start: tuple[int, int], goal: tuple[int, int]):
+    """Executa o algoritmo A* em um grid ortogonal (4 vizinhos) com `heapq`.
+
+    Este A* usa a distância Manhattan como heurística e custo uniforme (1 por passo).
+    A fila de prioridade é implementada com `heapq` (heap binário) e utiliza a
+    técnica de lazy deletion: quando um nó recebe um custo melhor, empilhamos uma
+    nova entrada com f menor e não removemos a antiga; ao desempilhar, ignoramos
+    entradas obsoletas comparando `f_curr` com `best_f[curr]`.
+
+    Parâmetros:
+    - grid: matriz booleana com obstáculos.
+    - start: célula de partida (row, col), deve ser válida/livre.
+    - goal: célula objetivo (row, col), deve ser válida/livre.
+
+    Retorna:
+    - Uma lista de células do caminho de `start` até `goal` (inclusive), ou None se
+      não houver caminho.
+    """
     if start is None or goal is None:
         return None
 
@@ -187,6 +252,18 @@ def a_star_grid(grid, start: tuple[int, int], goal: tuple[int, int]):
 
 
 def main():
+    """Aplicativo Pygame: edição de grid e perseguição do cursor com A*.
+
+    O programa abre uma janela onde o tabuleiro ocupa ~80% do espaço. O usuário
+    pode marcar/desmarcar células clicando e arrastando com o botão esquerdo do
+    mouse. Um agente (círculo) tenta perseguir a célula sob o cursor, planejando
+    um caminho A* até a célula livre mais próxima ao cursor (e também lidando
+    com o caso do agente iniciar dentro de um bloco, via `nearest_free_cell`).
+
+    O movimento do agente até o próximo waypoint é suave e limitado por
+    `AGENT_SPEED_PX_S`. Sempre que o objetivo muda (ou a grade muda), o caminho
+    é replanejado.
+    """
     pygame.init()
     try:
         screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -195,7 +272,7 @@ def main():
         pygame.quit()
         sys.exit(1)
 
-    pygame.display.set_caption("Tabuleiro 80% - Desenho com Mouse (32x32)")
+    pygame.display.set_caption("Tabuleiro 80% - Desenho com Mouse (16x16)")
     clock = pygame.time.Clock()
 
     board_rect = compute_board_rect(WINDOW_WIDTH, WINDOW_HEIGHT, CELL_SIZE, BOARD_SCALE)
